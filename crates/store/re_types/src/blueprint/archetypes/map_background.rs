@@ -13,9 +13,11 @@
 #![allow(clippy::too_many_lines)]
 
 use ::re_types_core::external::arrow2;
-use ::re_types_core::ComponentName;
 use ::re_types_core::SerializationResult;
-use ::re_types_core::{ComponentBatch, MaybeOwnedComponentBatch};
+use ::re_types_core::{
+    ComponentBatch, MaybeOwnedComponentBatch, MaybeOwnedDescribedComponentBatch,
+};
+use ::re_types_core::{ComponentDescriptor, ComponentName};
 use ::re_types_core::{DeserializationError, DeserializationResult};
 
 /// **Archetype**: Configuration for the background map of the map view.
@@ -54,6 +56,30 @@ static ALL_COMPONENTS: once_cell::sync::Lazy<[ComponentName; 2usize]> =
             "rerun.blueprint.components.MapBackgroundIndicator".into(),
             "rerun.blueprint.components.MapProvider".into(),
         ]
+    });
+
+static REQUIRED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 0usize]> =
+    once_cell::sync::Lazy::new(|| []);
+
+static RECOMMENDED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 0usize]> =
+    once_cell::sync::Lazy::new(|| []);
+
+static OPTIONAL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 1usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [ComponentDescriptor {
+            archetype_name: Some("rerun.blueprint.archetypes.MapBackground".into()),
+            component_name: "rerun.blueprint.components.MapProvider".into(),
+            archetype_field_name: Some("provider".into()),
+        }]
+    });
+
+static ALL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 1usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [ComponentDescriptor {
+            archetype_name: Some("rerun.blueprint.archetypes.MapBackground".into()),
+            component_name: "rerun.blueprint.components.MapProvider".into(),
+            archetype_field_name: Some("provider".into()),
+        }]
     });
 
 impl MapBackground {
@@ -104,6 +130,26 @@ impl ::re_types_core::Archetype for MapBackground {
     }
 
     #[inline]
+    fn required_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        REQUIRED_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn recommended_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        RECOMMENDED_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn optional_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        OPTIONAL_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn all_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        ALL_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
     fn from_arrow_components(
         arrow_data: impl IntoIterator<Item = (ComponentName, Box<dyn arrow2::array::Array>)>,
     ) -> DeserializationResult<Self> {
@@ -134,9 +180,39 @@ impl ::re_types_core::AsComponents for MapBackground {
     fn as_component_batches(&self) -> Vec<MaybeOwnedComponentBatch<'_>> {
         re_tracing::profile_function!();
         use ::re_types_core::Archetype as _;
+        self.as_described_component_batches()
+            .into_iter()
+            .map(|described| described.batch)
+            .collect()
+    }
+
+    fn as_described_component_batches(&self) -> Vec<MaybeOwnedDescribedComponentBatch<'_>> {
+        re_tracing::profile_function!();
+        use ::re_types_core::Archetype as _;
         [
-            Some(Self::indicator()),
-            Some((&self.provider as &dyn ComponentBatch).into()),
+            Some({
+                use ::re_types_core::LoggableBatch as _;
+                let indicator_batch = Self::indicator();
+                let indicator_name = indicator_batch.name();
+                MaybeOwnedDescribedComponentBatch {
+                    batch: indicator_batch,
+                    descriptor: ComponentDescriptor {
+                        archetype_name: Some(Self::name()),
+                        component_name: indicator_name,
+                        archetype_field_name: None,
+                    },
+                }
+            }),
+            (Some(&self.provider as &dyn ComponentBatch)).map(|batch| {
+                ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                    batch: batch.into(),
+                    descriptor: ComponentDescriptor {
+                        archetype_name: Some("rerun.blueprint.archetypes.MapBackground".into()),
+                        archetype_field_name: Some(("provider").into()),
+                        component_name: ("rerun.blueprint.components.MapProvider").into(),
+                    },
+                }
+            }),
         ]
         .into_iter()
         .flatten()

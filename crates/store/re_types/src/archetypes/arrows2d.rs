@@ -13,9 +13,11 @@
 #![allow(clippy::too_many_lines)]
 
 use ::re_types_core::external::arrow2;
-use ::re_types_core::ComponentName;
 use ::re_types_core::SerializationResult;
-use ::re_types_core::{ComponentBatch, MaybeOwnedComponentBatch};
+use ::re_types_core::{
+    ComponentBatch, MaybeOwnedComponentBatch, MaybeOwnedDescribedComponentBatch,
+};
+use ::re_types_core::{ComponentDescriptor, ComponentName};
 use ::re_types_core::{DeserializationError, DeserializationResult};
 
 /// **Archetype**: 2D arrows with optional colors, radii, labels, etc.
@@ -151,6 +153,106 @@ static ALL_COMPONENTS: once_cell::sync::Lazy<[ComponentName; 9usize]> =
         ]
     });
 
+static REQUIRED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 1usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [ComponentDescriptor {
+            archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+            component_name: "rerun.components.Vector2D".into(),
+            archetype_field_name: Some("vectors".into()),
+        }]
+    });
+
+static RECOMMENDED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 1usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [ComponentDescriptor {
+            archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+            component_name: "rerun.components.Position2D".into(),
+            archetype_field_name: Some("origins".into()),
+        }]
+    });
+
+static OPTIONAL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 6usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.Radius".into(),
+                archetype_field_name: Some("radii".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.Color".into(),
+                archetype_field_name: Some("colors".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.Text".into(),
+                archetype_field_name: Some("labels".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.ShowLabels".into(),
+                archetype_field_name: Some("show_labels".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.DrawOrder".into(),
+                archetype_field_name: Some("draw_order".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.ClassId".into(),
+                archetype_field_name: Some("class_ids".into()),
+            },
+        ]
+    });
+
+static ALL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 8usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.Vector2D".into(),
+                archetype_field_name: Some("vectors".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.Position2D".into(),
+                archetype_field_name: Some("origins".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.Radius".into(),
+                archetype_field_name: Some("radii".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.Color".into(),
+                archetype_field_name: Some("colors".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.Text".into(),
+                archetype_field_name: Some("labels".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.ShowLabels".into(),
+                archetype_field_name: Some("show_labels".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.DrawOrder".into(),
+                archetype_field_name: Some("draw_order".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                component_name: "rerun.components.ClassId".into(),
+                archetype_field_name: Some("class_ids".into()),
+            },
+        ]
+    });
+
 impl Arrows2D {
     /// The total number of components in the archetype: 1 required, 2 recommended, 6 optional
     pub const NUM_COMPONENTS: usize = 9usize;
@@ -196,6 +298,26 @@ impl ::re_types_core::Archetype for Arrows2D {
     #[inline]
     fn all_components() -> ::std::borrow::Cow<'static, [ComponentName]> {
         ALL_COMPONENTS.as_slice().into()
+    }
+
+    #[inline]
+    fn required_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        REQUIRED_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn recommended_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        RECOMMENDED_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn optional_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        OPTIONAL_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn all_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        ALL_COMPONENT_DESCRIPTORS.as_slice().into()
     }
 
     #[inline]
@@ -315,30 +437,123 @@ impl ::re_types_core::AsComponents for Arrows2D {
     fn as_component_batches(&self) -> Vec<MaybeOwnedComponentBatch<'_>> {
         re_tracing::profile_function!();
         use ::re_types_core::Archetype as _;
+        self.as_described_component_batches()
+            .into_iter()
+            .map(|described| described.batch)
+            .collect()
+    }
+
+    fn as_described_component_batches(&self) -> Vec<MaybeOwnedDescribedComponentBatch<'_>> {
+        re_tracing::profile_function!();
+        use ::re_types_core::Archetype as _;
         [
-            Some(Self::indicator()),
-            Some((&self.vectors as &dyn ComponentBatch).into()),
-            self.origins
+            Some({
+                use ::re_types_core::LoggableBatch as _;
+                let indicator_batch = Self::indicator();
+                let indicator_name = indicator_batch.name();
+                MaybeOwnedDescribedComponentBatch {
+                    batch: indicator_batch,
+                    descriptor: ComponentDescriptor {
+                        archetype_name: Some(Self::name()),
+                        component_name: indicator_name,
+                        archetype_field_name: None,
+                    },
+                }
+            }),
+            (Some(&self.vectors as &dyn ComponentBatch)).map(|batch| {
+                ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                    batch: batch.into(),
+                    descriptor: ComponentDescriptor {
+                        archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                        archetype_field_name: Some(("vectors").into()),
+                        component_name: ("rerun.components.Vector2D").into(),
+                    },
+                }
+            }),
+            (self
+                .origins
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.radii
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                    archetype_field_name: Some(("origins").into()),
+                    component_name: ("rerun.components.Position2D").into(),
+                },
+            }),
+            (self
+                .radii
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.colors
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                    archetype_field_name: Some(("radii").into()),
+                    component_name: ("rerun.components.Radius").into(),
+                },
+            }),
+            (self
+                .colors
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.labels
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                    archetype_field_name: Some(("colors").into()),
+                    component_name: ("rerun.components.Color").into(),
+                },
+            }),
+            (self
+                .labels
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.show_labels
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                    archetype_field_name: Some(("labels").into()),
+                    component_name: ("rerun.components.Text").into(),
+                },
+            }),
+            (self
+                .show_labels
                 .as_ref()
-                .map(|comp| (comp as &dyn ComponentBatch).into()),
-            self.draw_order
+                .map(|comp| (comp as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                    archetype_field_name: Some(("show_labels").into()),
+                    component_name: ("rerun.components.ShowLabels").into(),
+                },
+            }),
+            (self
+                .draw_order
                 .as_ref()
-                .map(|comp| (comp as &dyn ComponentBatch).into()),
-            self.class_ids
+                .map(|comp| (comp as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                    archetype_field_name: Some(("draw_order").into()),
+                    component_name: ("rerun.components.DrawOrder").into(),
+                },
+            }),
+            (self
+                .class_ids
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Arrows2D".into()),
+                    archetype_field_name: Some(("class_ids").into()),
+                    component_name: ("rerun.components.ClassId").into(),
+                },
+            }),
         ]
         .into_iter()
         .flatten()

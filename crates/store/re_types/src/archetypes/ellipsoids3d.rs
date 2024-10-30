@@ -13,9 +13,11 @@
 #![allow(clippy::too_many_lines)]
 
 use ::re_types_core::external::arrow2;
-use ::re_types_core::ComponentName;
 use ::re_types_core::SerializationResult;
-use ::re_types_core::{ComponentBatch, MaybeOwnedComponentBatch};
+use ::re_types_core::{
+    ComponentBatch, MaybeOwnedComponentBatch, MaybeOwnedDescribedComponentBatch,
+};
+use ::re_types_core::{ComponentDescriptor, ComponentName};
 use ::re_types_core::{DeserializationError, DeserializationResult};
 
 /// **Archetype**: 3D ellipsoids or spheres.
@@ -145,6 +147,128 @@ static ALL_COMPONENTS: once_cell::sync::Lazy<[ComponentName; 11usize]> =
         ]
     });
 
+static REQUIRED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 1usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [ComponentDescriptor {
+            archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+            component_name: "rerun.components.HalfSize3D".into(),
+            archetype_field_name: Some("half_sizes".into()),
+        }]
+    });
+
+static RECOMMENDED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 2usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.PoseTranslation3D".into(),
+                archetype_field_name: Some("centers".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.Color".into(),
+                archetype_field_name: Some("colors".into()),
+            },
+        ]
+    });
+
+static OPTIONAL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 7usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.PoseRotationAxisAngle".into(),
+                archetype_field_name: Some("rotation_axis_angles".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.PoseRotationQuat".into(),
+                archetype_field_name: Some("quaternions".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.Radius".into(),
+                archetype_field_name: Some("line_radii".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.FillMode".into(),
+                archetype_field_name: Some("fill_mode".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.Text".into(),
+                archetype_field_name: Some("labels".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.ShowLabels".into(),
+                archetype_field_name: Some("show_labels".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.ClassId".into(),
+                archetype_field_name: Some("class_ids".into()),
+            },
+        ]
+    });
+
+static ALL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 10usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.HalfSize3D".into(),
+                archetype_field_name: Some("half_sizes".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.PoseTranslation3D".into(),
+                archetype_field_name: Some("centers".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.Color".into(),
+                archetype_field_name: Some("colors".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.PoseRotationAxisAngle".into(),
+                archetype_field_name: Some("rotation_axis_angles".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.PoseRotationQuat".into(),
+                archetype_field_name: Some("quaternions".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.Radius".into(),
+                archetype_field_name: Some("line_radii".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.FillMode".into(),
+                archetype_field_name: Some("fill_mode".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.Text".into(),
+                archetype_field_name: Some("labels".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.ShowLabels".into(),
+                archetype_field_name: Some("show_labels".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                component_name: "rerun.components.ClassId".into(),
+                archetype_field_name: Some("class_ids".into()),
+            },
+        ]
+    });
+
 impl Ellipsoids3D {
     /// The total number of components in the archetype: 1 required, 3 recommended, 7 optional
     pub const NUM_COMPONENTS: usize = 11usize;
@@ -190,6 +314,26 @@ impl ::re_types_core::Archetype for Ellipsoids3D {
     #[inline]
     fn all_components() -> ::std::borrow::Cow<'static, [ComponentName]> {
         ALL_COMPONENTS.as_slice().into()
+    }
+
+    #[inline]
+    fn required_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        REQUIRED_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn recommended_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        RECOMMENDED_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn optional_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        OPTIONAL_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn all_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        ALL_COMPONENT_DESCRIPTORS.as_slice().into()
     }
 
     #[inline]
@@ -338,36 +482,147 @@ impl ::re_types_core::AsComponents for Ellipsoids3D {
     fn as_component_batches(&self) -> Vec<MaybeOwnedComponentBatch<'_>> {
         re_tracing::profile_function!();
         use ::re_types_core::Archetype as _;
+        self.as_described_component_batches()
+            .into_iter()
+            .map(|described| described.batch)
+            .collect()
+    }
+
+    fn as_described_component_batches(&self) -> Vec<MaybeOwnedDescribedComponentBatch<'_>> {
+        re_tracing::profile_function!();
+        use ::re_types_core::Archetype as _;
         [
-            Some(Self::indicator()),
-            Some((&self.half_sizes as &dyn ComponentBatch).into()),
-            self.centers
+            Some({
+                use ::re_types_core::LoggableBatch as _;
+                let indicator_batch = Self::indicator();
+                let indicator_name = indicator_batch.name();
+                MaybeOwnedDescribedComponentBatch {
+                    batch: indicator_batch,
+                    descriptor: ComponentDescriptor {
+                        archetype_name: Some(Self::name()),
+                        component_name: indicator_name,
+                        archetype_field_name: None,
+                    },
+                }
+            }),
+            (Some(&self.half_sizes as &dyn ComponentBatch)).map(|batch| {
+                ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                    batch: batch.into(),
+                    descriptor: ComponentDescriptor {
+                        archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                        archetype_field_name: Some(("half_sizes").into()),
+                        component_name: ("rerun.components.HalfSize3D").into(),
+                    },
+                }
+            }),
+            (self
+                .centers
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.rotation_axis_angles
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                    archetype_field_name: Some(("centers").into()),
+                    component_name: ("rerun.components.PoseTranslation3D").into(),
+                },
+            }),
+            (self
+                .rotation_axis_angles
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.quaternions
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                    archetype_field_name: Some(("rotation_axis_angles").into()),
+                    component_name: ("rerun.components.PoseRotationAxisAngle").into(),
+                },
+            }),
+            (self
+                .quaternions
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.colors
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                    archetype_field_name: Some(("quaternions").into()),
+                    component_name: ("rerun.components.PoseRotationQuat").into(),
+                },
+            }),
+            (self
+                .colors
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.line_radii
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                    archetype_field_name: Some(("colors").into()),
+                    component_name: ("rerun.components.Color").into(),
+                },
+            }),
+            (self
+                .line_radii
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.fill_mode
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                    archetype_field_name: Some(("line_radii").into()),
+                    component_name: ("rerun.components.Radius").into(),
+                },
+            }),
+            (self
+                .fill_mode
                 .as_ref()
-                .map(|comp| (comp as &dyn ComponentBatch).into()),
-            self.labels
+                .map(|comp| (comp as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                    archetype_field_name: Some(("fill_mode").into()),
+                    component_name: ("rerun.components.FillMode").into(),
+                },
+            }),
+            (self
+                .labels
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
-            self.show_labels
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                    archetype_field_name: Some(("labels").into()),
+                    component_name: ("rerun.components.Text").into(),
+                },
+            }),
+            (self
+                .show_labels
                 .as_ref()
-                .map(|comp| (comp as &dyn ComponentBatch).into()),
-            self.class_ids
+                .map(|comp| (comp as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                    archetype_field_name: Some(("show_labels").into()),
+                    component_name: ("rerun.components.ShowLabels").into(),
+                },
+            }),
+            (self
+                .class_ids
                 .as_ref()
-                .map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()),
+                .map(|comp_batch| (comp_batch as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.archetypes.Ellipsoids3D".into()),
+                    archetype_field_name: Some(("class_ids").into()),
+                    component_name: ("rerun.components.ClassId").into(),
+                },
+            }),
         ]
         .into_iter()
         .flatten()

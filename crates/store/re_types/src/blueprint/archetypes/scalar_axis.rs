@@ -13,9 +13,11 @@
 #![allow(clippy::too_many_lines)]
 
 use ::re_types_core::external::arrow2;
-use ::re_types_core::ComponentName;
 use ::re_types_core::SerializationResult;
-use ::re_types_core::{ComponentBatch, MaybeOwnedComponentBatch};
+use ::re_types_core::{
+    ComponentBatch, MaybeOwnedComponentBatch, MaybeOwnedDescribedComponentBatch,
+};
+use ::re_types_core::{ComponentDescriptor, ComponentName};
 use ::re_types_core::{DeserializationError, DeserializationResult};
 
 /// **Archetype**: Configuration for the scalar axis of a plot.
@@ -63,6 +65,44 @@ static ALL_COMPONENTS: once_cell::sync::Lazy<[ComponentName; 3usize]> =
             "rerun.blueprint.components.ScalarAxisIndicator".into(),
             "rerun.components.Range1D".into(),
             "rerun.blueprint.components.LockRangeDuringZoom".into(),
+        ]
+    });
+
+static REQUIRED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 0usize]> =
+    once_cell::sync::Lazy::new(|| []);
+
+static RECOMMENDED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 0usize]> =
+    once_cell::sync::Lazy::new(|| []);
+
+static OPTIONAL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 2usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [
+            ComponentDescriptor {
+                archetype_name: Some("rerun.blueprint.archetypes.ScalarAxis".into()),
+                component_name: "rerun.components.Range1D".into(),
+                archetype_field_name: Some("range".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.blueprint.archetypes.ScalarAxis".into()),
+                component_name: "rerun.blueprint.components.LockRangeDuringZoom".into(),
+                archetype_field_name: Some("zoom_lock".into()),
+            },
+        ]
+    });
+
+static ALL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; 2usize]> =
+    once_cell::sync::Lazy::new(|| {
+        [
+            ComponentDescriptor {
+                archetype_name: Some("rerun.blueprint.archetypes.ScalarAxis".into()),
+                component_name: "rerun.components.Range1D".into(),
+                archetype_field_name: Some("range".into()),
+            },
+            ComponentDescriptor {
+                archetype_name: Some("rerun.blueprint.archetypes.ScalarAxis".into()),
+                component_name: "rerun.blueprint.components.LockRangeDuringZoom".into(),
+                archetype_field_name: Some("zoom_lock".into()),
+            },
         ]
     });
 
@@ -114,6 +154,26 @@ impl ::re_types_core::Archetype for ScalarAxis {
     }
 
     #[inline]
+    fn required_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        REQUIRED_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn recommended_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        RECOMMENDED_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn optional_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        OPTIONAL_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
+    fn all_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+        ALL_COMPONENT_DESCRIPTORS.as_slice().into()
+    }
+
+    #[inline]
     fn from_arrow_components(
         arrow_data: impl IntoIterator<Item = (ComponentName, Box<dyn arrow2::array::Array>)>,
     ) -> DeserializationResult<Self> {
@@ -151,14 +211,53 @@ impl ::re_types_core::AsComponents for ScalarAxis {
     fn as_component_batches(&self) -> Vec<MaybeOwnedComponentBatch<'_>> {
         re_tracing::profile_function!();
         use ::re_types_core::Archetype as _;
+        self.as_described_component_batches()
+            .into_iter()
+            .map(|described| described.batch)
+            .collect()
+    }
+
+    fn as_described_component_batches(&self) -> Vec<MaybeOwnedDescribedComponentBatch<'_>> {
+        re_tracing::profile_function!();
+        use ::re_types_core::Archetype as _;
         [
-            Some(Self::indicator()),
-            self.range
+            Some({
+                use ::re_types_core::LoggableBatch as _;
+                let indicator_batch = Self::indicator();
+                let indicator_name = indicator_batch.name();
+                MaybeOwnedDescribedComponentBatch {
+                    batch: indicator_batch,
+                    descriptor: ComponentDescriptor {
+                        archetype_name: Some(Self::name()),
+                        component_name: indicator_name,
+                        archetype_field_name: None,
+                    },
+                }
+            }),
+            (self
+                .range
                 .as_ref()
-                .map(|comp| (comp as &dyn ComponentBatch).into()),
-            self.zoom_lock
+                .map(|comp| (comp as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.blueprint.archetypes.ScalarAxis".into()),
+                    archetype_field_name: Some(("range").into()),
+                    component_name: ("rerun.components.Range1D").into(),
+                },
+            }),
+            (self
+                .zoom_lock
                 .as_ref()
-                .map(|comp| (comp as &dyn ComponentBatch).into()),
+                .map(|comp| (comp as &dyn ComponentBatch)))
+            .map(|batch| ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                batch: batch.into(),
+                descriptor: ComponentDescriptor {
+                    archetype_name: Some("rerun.blueprint.archetypes.ScalarAxis".into()),
+                    archetype_field_name: Some(("zoom_lock").into()),
+                    component_name: ("rerun.blueprint.components.LockRangeDuringZoom").into(),
+                },
+            }),
         ]
         .into_iter()
         .flatten()

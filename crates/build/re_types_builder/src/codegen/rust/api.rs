@@ -184,8 +184,8 @@ fn generate_object_file(
     code.push_str("use ::re_types_core::external::arrow2;\n");
     code.push_str("use ::re_types_core::SerializationResult;\n");
     code.push_str("use ::re_types_core::{DeserializationResult, DeserializationError};\n");
-    code.push_str("use ::re_types_core::ComponentName;\n");
-    code.push_str("use ::re_types_core::{ComponentBatch, MaybeOwnedComponentBatch};\n");
+    code.push_str("use ::re_types_core::{ComponentDescriptor, ComponentName};\n");
+    code.push_str("use ::re_types_core::{ComponentBatch, MaybeOwnedComponentBatch, MaybeOwnedDescribedComponentBatch};\n");
 
     // NOTE: `TokenStream`s discard whitespacing information by definition, so we need to
     // inject some of our own when writing to file… while making sure that don't inject
@@ -1045,10 +1045,10 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
 
     fn compute_components(
         obj: &Object,
-        attr: &'static str,
+        requirement_attr_value: &'static str,
         extras: impl IntoIterator<Item = String>,
     ) -> (usize, TokenStream) {
-        let components = iter_archetype_components(obj, attr)
+        let components = iter_archetype_components(obj, requirement_attr_value)
             .chain(extras)
             // Do *not* sort again, we want to preserve the order given by the datatype definition
             .collect::<Vec<_>>();
@@ -1057,6 +1057,35 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
         let quoted_components = quote!(#(#components.into(),)*);
 
         (num_components, quoted_components)
+    }
+
+    fn compute_component_descriptors(
+        obj: &Object,
+        requirement_attr_value: &'static str,
+    ) -> (usize, TokenStream) {
+        let descriptors = obj
+            .fields
+            .iter()
+            .filter_map(move |field| {
+                field
+                    .try_get_attr::<String>(requirement_attr_value)
+                    .map(|_| {
+                        let Some(component_name) = field.typ.fqname() else {
+                            panic!("Archetype field must be an object/union or an array/vector of such")
+                        };
+                        let archetype_name = &obj.fqname;
+                        let archetype_field_name = field.snake_case_name();
+                        quote!(ComponentDescriptor {
+                            archetype_name: Some(#archetype_name.into()),
+                            component_name: #component_name.into(),
+                            archetype_field_name: Some(#archetype_field_name.into()),
+                        })
+                    })
+            })
+            .collect_vec();
+        let num_descriptors = descriptors.len();
+        let quoted_descriptors = quote!(#(#descriptors,)*);
+        (num_descriptors, quoted_descriptors)
     }
 
     let indicator_name = format!("{}Indicator", obj.name);
@@ -1076,6 +1105,15 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
     ));
     let num_all = num_required + num_recommended + num_optional;
 
+    let (num_required_descriptors, required_descriptors) =
+        compute_component_descriptors(obj, ATTR_RERUN_COMPONENT_REQUIRED);
+    let (num_recommended_descriptors, recommended_descriptors) =
+        compute_component_descriptors(obj, ATTR_RERUN_COMPONENT_RECOMMENDED);
+    let (num_optional_descriptors, optional_descriptors) =
+        compute_component_descriptors(obj, ATTR_RERUN_COMPONENT_OPTIONAL);
+    let num_all_descriptors =
+        num_required_descriptors + num_recommended_descriptors + num_optional_descriptors;
+
     let quoted_field_names = obj
         .fields
         .iter()
@@ -1084,7 +1122,19 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
 
     let all_component_batches = {
         std::iter::once(quote!{
-            Some(Self::indicator())
+            Some({
+                use ::re_types_core::LoggableBatch as _;
+                let indicator_batch = Self::indicator();
+                let indicator_name = indicator_batch.name();
+                MaybeOwnedDescribedComponentBatch {
+                    batch: indicator_batch,
+                    descriptor: ComponentDescriptor {
+                        archetype_name: Some(Self::name()),
+                        component_name: indicator_name,
+                        archetype_field_name: None,
+                    }
+                }
+            })
         }).chain(obj.fields.iter().map(|obj_field| {
             let field_name = format_ident!("{}", obj_field.name);
             let is_plural = obj_field.typ.is_plural();
@@ -1092,13 +1142,13 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
 
             // NOTE: The nullability we're dealing with here is the nullability of an entire array of components,
             // not the nullability of individual elements (i.e. instances)!
-            if is_nullable {
+            let batch = if is_nullable {
                 if obj.attrs.has(ATTR_RERUN_LOG_MISSING_AS_EMPTY) {
                     if is_plural {
                         // Always log Option<Vec<C>> as Vec<V>, mapping None to empty batch
                         let component_type = quote_field_type_from_typ(&obj_field.typ, false).0;
                         quote!{
-                            Some((
+                            Some(
                                 if let Some(comp_batch) = &self.#field_name {
                                     (comp_batch as &dyn ComponentBatch)
                                 } else {
@@ -1107,24 +1157,44 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
                                     let empty_batch: &#component_type = EMPTY_BATCH.get_or_init(|| Vec::new());
                                     (empty_batch as &dyn ComponentBatch)
                                 }
-                            ).into())
+                            )
                         }
                     } else {
                         // Always log Option<C>, mapping None to empty batch
-                        quote!{ Some((&self.#field_name as &dyn ComponentBatch).into()) }
+                        quote!{ Some(&self.#field_name as &dyn ComponentBatch) }
                     }
                 } else {
                     if is_plural {
                         // Maybe logging an Option<Vec<C>>
-                        quote!{ self.#field_name.as_ref().map(|comp_batch| (comp_batch as &dyn ComponentBatch).into()) }
+                        quote!{ self.#field_name.as_ref().map(|comp_batch| (comp_batch as &dyn ComponentBatch)) }
                     } else {
                         // Maybe logging an Option<C>
-                        quote!{ self.#field_name.as_ref().map(|comp| (comp as &dyn ComponentBatch).into()) }
+                        quote!{ self.#field_name.as_ref().map(|comp| (comp as &dyn ComponentBatch)) }
                     }
                 }
             } else {
                 // Always logging a Vec<C> or C
-                quote!{ Some((&self.#field_name as &dyn ComponentBatch).into()) }
+                quote!{ Some(&self.#field_name as &dyn ComponentBatch) }
+            };
+
+            let Some(component_name) = obj_field.typ.fqname() else {
+                panic!("Archetype field must be an object/union or an array/vector of such")
+            };
+            let archetype_name = &obj.fqname;
+            let archetype_field_name = obj_field.snake_case_name();
+
+            quote! {
+                (#batch).map(|batch| {
+                    ::re_types_core::MaybeOwnedDescribedComponentBatch {
+                        batch: batch.into(),
+                        descriptor: ComponentDescriptor {
+                            archetype_name: Some(#archetype_name.into()),
+                            archetype_field_name: Some((#archetype_field_name).into()),
+                            component_name: (#component_name).into(),
+                        },
+                    }
+                })
+
             }
         }))
     };
@@ -1208,6 +1278,7 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
     };
 
     quote! {
+        // TODO: can we remove all of this now? probably at the same time we remove indicators, ye?
         static REQUIRED_COMPONENTS: once_cell::sync::Lazy<[ComponentName; #num_required]> =
             once_cell::sync::Lazy::new(|| {[#required]});
 
@@ -1219,6 +1290,18 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
 
         static ALL_COMPONENTS: once_cell::sync::Lazy<[ComponentName; #num_all]> =
             once_cell::sync::Lazy::new(|| {[#required #recommended #optional]});
+
+        static REQUIRED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; #num_required_descriptors]> =
+            once_cell::sync::Lazy::new(|| {[#required_descriptors]});
+
+        static RECOMMENDED_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; #num_recommended_descriptors]> =
+            once_cell::sync::Lazy::new(|| {[#recommended_descriptors]});
+
+        static OPTIONAL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; #num_optional_descriptors]> =
+            once_cell::sync::Lazy::new(|| {[#optional_descriptors]});
+
+        static ALL_COMPONENT_DESCRIPTORS: once_cell::sync::Lazy<[ComponentDescriptor; #num_all_descriptors]> =
+            once_cell::sync::Lazy::new(|| {[#required_descriptors #recommended_descriptors #optional_descriptors]});
 
         impl #name {
             #num_components_docstring
@@ -1269,6 +1352,27 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
             }
 
             #[inline]
+            fn required_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]> {
+                REQUIRED_COMPONENT_DESCRIPTORS.as_slice().into()
+            }
+
+            #[inline]
+            fn recommended_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]>  {
+                RECOMMENDED_COMPONENT_DESCRIPTORS.as_slice().into()
+            }
+
+            #[inline]
+            fn optional_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]>  {
+                OPTIONAL_COMPONENT_DESCRIPTORS.as_slice().into()
+            }
+
+            // NOTE: Don't rely on default implementation so that we can keep everything static.
+            #[inline]
+            fn all_component_descriptors() -> ::std::borrow::Cow<'static, [ComponentDescriptor]>  {
+                ALL_COMPONENT_DESCRIPTORS.as_slice().into()
+            }
+
+            #[inline]
             fn from_arrow_components(
                 arrow_data: impl IntoIterator<Item = (
                     ComponentName,
@@ -1299,7 +1403,16 @@ fn quote_trait_impls_for_archetype(obj: &Object) -> TokenStream {
                 re_tracing::profile_function!();
 
                 use ::re_types_core::Archetype as _;
+                self.as_described_component_batches()
+                    .into_iter()
+                    .map(|described| described.batch)
+                    .collect()
+            }
 
+            fn as_described_component_batches(&self) -> Vec<MaybeOwnedDescribedComponentBatch<'_>> {
+                re_tracing::profile_function!();
+
+                use ::re_types_core::Archetype as _;
                 [#(#all_component_batches,)*].into_iter().flatten().collect()
             }
         }

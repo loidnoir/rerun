@@ -132,8 +132,10 @@ impl ChunkStoreSubscriber for TransformComponentTrackerStoreSubscriber {
                     .chunk
                     .components()
                     .get(&component_name)
-                    .map_or(false, |list_array| {
-                        list_array.offsets().lengths().any(|len| len > 0)
+                    .map_or(false, |per_desc| {
+                        per_desc
+                            .values()
+                            .any(|list_array| list_array.offsets().lengths().any(|len| len > 0))
                     })
             };
 

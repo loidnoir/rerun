@@ -6,7 +6,12 @@ use rerun::{
     ComponentName,
 };
 
+// TODO: i guess that is where we can update these tests, right?
+
 // ---
+
+// TODO: This example is only part of the story. We need to show both how to build a custom
+// archetype using an existing rerun component and how to go full homegrown.
 
 /// A custom [component bundle] that extends Rerun's builtin [`rerun::Points3D`] archetype with extra
 /// [`rerun::Component`]s.
@@ -38,6 +43,9 @@ impl rerun::AsComponents for CustomPoints3D {
 }
 
 // ---
+
+// TODO: This example is only part of the story. We need to show both how to build a custom
+// component using an existing rerun datatype and how to go full homegrown.
 
 /// A custom [`rerun::Component`] that is backed by a builtin [`rerun::Float32`] scalar.
 #[derive(Debug, Clone, Copy)]

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use ahash::HashMap;
 use itertools::{FoldWhile, Itertools};
 use parking_lot::Mutex;
-use re_types::SpaceViewClassIdentifier;
+use re_types::{ComponentDescriptor, SpaceViewClassIdentifier};
 
 use re_chunk::{Chunk, RowId};
 use re_chunk_store::LatestAtQuery;
@@ -277,7 +277,7 @@ impl SpaceViewBlueprint {
                                     .cache()
                                     .latest_at(query, path, [component_name])
                                     .component_batch_raw(&component_name);
-                                array.map(|array| (component_name, array))
+                                array.map(|array| (ComponentDescriptor::new(component_name), array))
                             }),
                     )
                     .build();

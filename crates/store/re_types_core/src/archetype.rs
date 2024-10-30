@@ -1,12 +1,15 @@
 use crate::{
-    ComponentBatch, ComponentName, DeserializationResult, MaybeOwnedComponentBatch,
-    SerializationResult, _Backtrace,
+    ComponentBatch, ComponentDescriptor, ComponentName, DeserializationResult,
+    MaybeOwnedComponentBatch, SerializationResult, _Backtrace,
 };
 
 #[allow(unused_imports)] // used in docstrings
 use crate::{Component, Loggable, LoggableBatch};
 
 // ---
+
+// TODO: reminder that there is no reason ever for an archetype to deal with non-described batches.
+// -> Users should still be allowed to come up with such a thing though...
 
 /// An archetype is a high-level construct that represents a set of [`Component`]s that usually
 /// play well with each other (i.e. they compose nicely).
@@ -96,6 +99,47 @@ pub trait Archetype {
 
     // ---
 
+    // TODO(cmc): these methods shouldn't have default bodies, but we need codegen for that.
+
+    /// Returns all component descriptors that _must_ be provided by the user when constructing this archetype.
+    fn required_component_descriptors() -> std::borrow::Cow<'static, [ComponentDescriptor]> {
+        std::borrow::Cow::Borrowed(&[])
+    }
+
+    /// Returns all component descriptors that _should_ be provided by the user when constructing this archetype.
+    #[inline]
+    fn recommended_component_descriptors() -> std::borrow::Cow<'static, [ComponentDescriptor]> {
+        std::borrow::Cow::Borrowed(&[])
+    }
+
+    /// Returns all component descriptors that _may_ be provided by the user when constructing this archetype.
+    #[inline]
+    fn optional_component_descriptors() -> std::borrow::Cow<'static, [ComponentDescriptor]> {
+        std::borrow::Cow::Borrowed(&[])
+    }
+
+    /// Returns all component descriptors that must, should and may be provided by the user when constructing
+    /// this archetype.
+    ///
+    /// The default implementation always does the right thing, at the cost of some runtime
+    /// allocations.
+    /// If you know all your component descriptors statically, you can override this method to get rid of the
+    /// extra allocations.
+    #[inline]
+    fn all_component_descriptors() -> std::borrow::Cow<'static, [ComponentDescriptor]> {
+        [
+            Self::required_component_descriptors().into_owned(),
+            Self::recommended_component_descriptors().into_owned(),
+            Self::optional_component_descriptors().into_owned(),
+        ]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>()
+        .into()
+    }
+
+    // ---
+
     /// Given an iterator of Arrow arrays and their respective field metadata, deserializes them
     /// into this archetype.
     ///
@@ -173,6 +217,27 @@ impl ArchetypeName {
         } else {
             full_name
         }
+    }
+}
+
+impl crate::SizeBytes for ArchetypeName {
+    #[inline]
+    fn heap_size_bytes(&self) -> u64 {
+        0
+    }
+}
+
+// ---
+
+re_string_interner::declare_new_type!(
+    /// The name of an [`Archetype`]'s field, e.g. `positions`.
+    pub struct ArchetypeFieldName;
+);
+
+impl crate::SizeBytes for ArchetypeFieldName {
+    #[inline]
+    fn heap_size_bytes(&self) -> u64 {
+        0
     }
 }
 

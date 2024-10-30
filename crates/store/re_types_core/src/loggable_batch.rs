@@ -1,4 +1,4 @@
-use crate::{Component, ComponentName, Loggable, SerializationResult};
+use crate::{Component, ComponentDescriptor, ComponentName, Loggable, SerializationResult};
 
 use arrow2::array::ListArray as ArrowListArray;
 
@@ -39,7 +39,46 @@ pub trait ComponentBatch: LoggableBatch {
         ArrowListArray::<i32>::try_new(data_type, offsets.into(), array.to_boxed(), None)
             .map_err(|err| err.into())
     }
+
+    // TODO
+    #[inline]
+    fn descriptor(&self) -> ComponentDescriptor {
+        ComponentDescriptor::new(self.name())
+    }
 }
+
+// TODO
+// TODO: remove this once naked names go away.
+pub struct MaybeOwnedDescribedComponentBatch<'a> {
+    pub batch: MaybeOwnedComponentBatch<'a>,
+    pub descriptor: ComponentDescriptor,
+}
+
+impl<'a> LoggableBatch for MaybeOwnedDescribedComponentBatch<'a> {
+    #[inline]
+    fn to_arrow(&self) -> SerializationResult<Box<dyn ::arrow2::array::Array>> {
+        self.batch.as_ref().to_arrow()
+    }
+}
+
+impl<'a> ComponentBatch for MaybeOwnedDescribedComponentBatch<'a> {
+    #[inline]
+    fn name(&self) -> ComponentName {
+        self.batch.as_ref().name()
+    }
+
+    fn descriptor(&self) -> ComponentDescriptor {
+        self.descriptor.clone()
+    }
+}
+
+// TODO: NO!
+// impl<'a> AsRef<dyn ComponentBatch + 'a> for MaybeOwnedDescribedComponentBatch<'a> {
+//     #[inline]
+//     fn as_ref(&self) -> &(dyn ComponentBatch + 'a) {
+//         self.batch.as_ref()
+//     }
+// }
 
 /// Holds either an owned [`ComponentBatch`] that lives on heap, or a reference to one.
 ///

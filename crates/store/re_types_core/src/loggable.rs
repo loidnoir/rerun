@@ -1,4 +1,6 @@
-use crate::{result::_Backtrace, DeserializationResult, SerializationResult, SizeBytes};
+use crate::{
+    result::_Backtrace, ComponentDescriptor, DeserializationResult, SerializationResult, SizeBytes,
+};
 
 #[allow(unused_imports)] // used in docstrings
 use crate::{Archetype, ComponentBatch, LoggableBatch};
@@ -84,7 +86,22 @@ pub trait Loggable: 'static + Send + Sync + Clone + Sized + SizeBytes {
 /// which makes it possible to work with lists' worth of data in a generic fashion.
 pub trait Component: Loggable {
     /// The fully-qualified name of this component, e.g. `rerun.components.Position2D`.
+    //
+    // TODO(cmc): This needs to go away ASAP.
     fn name() -> ComponentName;
+
+    /// Returns the complete [`ComponentDescriptor`] for this [`Component`].
+    ///
+    /// If the returned descriptor's [`component_name`] does not match [`Self::name`], undefined
+    /// behavior occurs.
+    ///
+    /// [`component_name`]: [`ComponentDescriptor::component_name`]
+    //
+    // TODO(cmc): This default implementation needs to go away once Self::name goes away too.
+    #[inline]
+    fn descriptor() -> ComponentDescriptor {
+        ComponentDescriptor::new(Self::name())
+    }
 }
 
 // ---

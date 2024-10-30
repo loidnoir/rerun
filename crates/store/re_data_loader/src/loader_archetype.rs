@@ -220,10 +220,13 @@ fn load_video(
                 std::iter::once((video_timeline, time_column)).collect(),
                 [
                     (
-                        VideoFrameReference::indicator().name(),
+                        VideoFrameReference::indicator().descriptor(),
                         video_frame_reference_indicators_list_array,
                     ),
-                    (video_timestamp_batch.name(), video_timestamp_list_array),
+                    (
+                        video_timestamp_batch.descriptor(),
+                        video_timestamp_list_array,
+                    ),
                 ]
                 .into_iter()
                 .collect(),

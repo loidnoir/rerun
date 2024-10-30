@@ -51,8 +51,23 @@ pub trait AsComponents {
     // depending on their presence (or lack thereof) at runtime anyway.
     fn as_component_batches(&self) -> Vec<MaybeOwnedComponentBatch<'_>>;
 
+    // TODO: should we keep the other one and why? surely not? oh right, because naked components
+    // implement this shit too.
+    // That doesn't seem like much of a valid reason though... naked components could still return
+    // an empty descriptor and call it a day? something at some point is gonna do that anyhow.
+    fn as_described_component_batches(&self) -> Vec<MaybeOwnedDescribedComponentBatch<'_>> {
+        self.as_component_batches()
+            .into_iter()
+            .map(|batch| {
+                let descriptor = batch.descriptor();
+                MaybeOwnedDescribedComponentBatch { batch, descriptor }
+            })
+            .collect()
+    }
+
     // ---
 
+    // TODO: this one I really want to get rid of but so many tests depend on this shit
     /// Serializes all non-null [`Component`]s of this bundle into Arrow arrays.
     ///
     /// The default implementation will simply serialize the result of [`Self::as_component_batches`]
@@ -94,6 +109,7 @@ impl<C: Component> AsComponents for C {
 mod archetype;
 mod arrow_buffer;
 mod arrow_string;
+mod component_descriptor;
 mod loggable;
 mod loggable_batch;
 pub mod reflection;
@@ -104,13 +120,16 @@ mod view;
 
 pub use self::{
     archetype::{
-        Archetype, ArchetypeName, ArchetypeReflectionMarker, GenericIndicatorComponent,
-        NamedIndicatorComponent,
+        Archetype, ArchetypeFieldName, ArchetypeName, ArchetypeReflectionMarker,
+        GenericIndicatorComponent, NamedIndicatorComponent,
     },
     arrow_buffer::ArrowBuffer,
     arrow_string::ArrowString,
+    component_descriptor::ComponentDescriptor,
     loggable::{Component, ComponentName, ComponentNameSet, DatatypeName, Loggable},
-    loggable_batch::{ComponentBatch, LoggableBatch, MaybeOwnedComponentBatch},
+    loggable_batch::{
+        ComponentBatch, LoggableBatch, MaybeOwnedComponentBatch, MaybeOwnedDescribedComponentBatch,
+    },
     result::{
         DeserializationError, DeserializationResult, ResultExt, SerializationError,
         SerializationResult, _Backtrace,
