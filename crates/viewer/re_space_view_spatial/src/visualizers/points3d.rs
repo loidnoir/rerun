@@ -4,7 +4,7 @@ use re_renderer::{LineDrawableBuilder, PickingLayerInstanceId, PointCloudBuilder
 use re_types::{
     archetypes::Points3D,
     components::{ClassId, Color, KeypointId, Position3D, Radius, ShowLabels, Text},
-    ArrowString, Loggable,
+    ArrowString, Component,
 };
 use re_viewer_context::{
     auto_color_for_entity_path, ApplicableEntities, IdentifiedViewSystem, QueryContext,

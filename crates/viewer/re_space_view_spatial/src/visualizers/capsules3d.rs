@@ -4,7 +4,7 @@ use ordered_float::NotNan;
 use re_types::{
     archetypes::Capsules3D,
     components::{self, ClassId, Color, FillMode, HalfSize3D, Length, Radius, ShowLabels, Text},
-    ArrowString, Loggable as _,
+    ArrowString, Component as _,
 };
 use re_viewer_context::{
     auto_color_for_entity_path, ApplicableEntities, IdentifiedViewSystem, QueryContext,

@@ -3,7 +3,7 @@ use re_renderer::PickingLayerInstanceId;
 use re_types::{
     archetypes::LineStrips3D,
     components::{ClassId, Color, KeypointId, LineStrip3D, Radius, ShowLabels, Text},
-    ArrowString, Loggable as _,
+    ArrowString, Component as _,
 };
 use re_viewer_context::{
     auto_color_for_entity_path, ApplicableEntities, IdentifiedViewSystem, QueryContext,

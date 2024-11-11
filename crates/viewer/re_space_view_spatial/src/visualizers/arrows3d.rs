@@ -3,7 +3,7 @@ use re_renderer::{renderer::LineStripFlags, LineDrawableBuilder, PickingLayerIns
 use re_types::{
     archetypes::Arrows3D,
     components::{ClassId, Color, KeypointId, Position3D, Radius, ShowLabels, Text, Vector3D},
-    ArrowString, Loggable as _,
+    ArrowString, Component as _,
 };
 use re_viewer_context::{
     auto_color_for_entity_path, ApplicableEntities, IdentifiedViewSystem, QueryContext,
