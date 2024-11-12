@@ -855,6 +855,17 @@
 <a href="#855" id="855">855</a>
 <a href="#856" id="856">856</a>
 <a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>nohash_hasher::IntMap;
@@ -862,8 +873,8 @@
 
 <span class="kw">use </span>re_chunk::{Chunk, ChunkResult, RowId, TimeInt};
 <span class="kw">use </span>re_chunk_store::{
-    ChunkStore, ChunkStoreChunkStats, ChunkStoreConfig, ChunkStoreEvent, ChunkStoreHandle,
-    ChunkStoreSubscriber, GarbageCollectionOptions, GarbageCollectionTarget,
+    ChunkStore, ChunkStoreChunkStats, ChunkStoreConfig, ChunkStoreDiffKind, ChunkStoreEvent,
+    ChunkStoreHandle, ChunkStoreSubscriber, GarbageCollectionOptions, GarbageCollectionTarget,
 };
 <span class="kw">use </span>re_log_types::{
     ApplicationId, EntityPath, EntityPathHash, LogMsg, ResolvedTimeRange, ResolvedTimeRangeF,
@@ -1242,7 +1253,13 @@
 
             <span class="comment">// It is possible for writes to trigger deletions: specifically in the case of
             // overwritten static data leading to dangling chunks.
-            </span><span class="self">self</span>.tree.on_store_deletions(<span class="kw-2">&amp;</span>engine, <span class="kw-2">&amp;</span>store_events);
+            </span><span class="kw">let </span>entity_paths_with_deletions = store_events
+                .iter()
+                .filter(|event| event.kind == ChunkStoreDiffKind::Deletion)
+                .map(|event| event.chunk.entity_path().clone())
+                .collect();
+            <span class="self">self</span>.tree
+                .on_store_deletions(<span class="kw-2">&amp;</span>engine, <span class="kw-2">&amp;</span>entity_paths_with_deletions, <span class="kw-2">&amp;</span>store_events);
 
             <span class="comment">// We inform the stats last, since it measures e2e latency.
             </span><span class="self">self</span>.stats.on_events(<span class="kw-2">&amp;</span>store_events);
@@ -1301,7 +1318,7 @@
         store_events
     }
 
-    <span class="kw">fn </span>gc(<span class="kw-2">&amp;mut </span><span class="self">self</span>, gc_options: <span class="kw-2">&amp;</span>GarbageCollectionOptions) -&gt; Vec&lt;ChunkStoreEvent&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>gc(<span class="kw-2">&amp;mut </span><span class="self">self</span>, gc_options: <span class="kw-2">&amp;</span>GarbageCollectionOptions) -&gt; Vec&lt;ChunkStoreEvent&gt; {
         <span class="macro">re_tracing::profile_function!</span>();
 
         <span class="kw">let </span><span class="kw-2">mut </span>engine = <span class="self">self</span>.storage_engine.write();
@@ -1401,7 +1418,12 @@
         time_histogram_per_timeline.on_events(store_events);
 
         <span class="kw">let </span>engine = engine.downgrade();
-        tree.on_store_deletions(<span class="kw-2">&amp;</span>engine, store_events);
+        <span class="kw">let </span>entity_paths_with_deletions = store_events
+            .iter()
+            .filter(|event| event.kind == ChunkStoreDiffKind::Deletion)
+            .map(|event| event.chunk.entity_path().clone())
+            .collect();
+        tree.on_store_deletions(<span class="kw-2">&amp;</span>engine, <span class="kw-2">&amp;</span>entity_paths_with_deletions, store_events);
     }
 
     <span class="doccomment">/// Key used for sorting recordings in the UI.

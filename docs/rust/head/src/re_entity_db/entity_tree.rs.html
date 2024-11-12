@@ -237,10 +237,111 @@
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">use </span>ahash::HashSet;
-<span class="kw">use </span>nohash_hasher::IntMap;
+<span class="kw">use </span>nohash_hasher::{IntMap, IntSet};
 
 <span class="kw">use </span>re_chunk::RowId;
 <span class="kw">use </span>re_chunk_store::{ChunkStoreDiffKind, ChunkStoreEvent, ChunkStoreSubscriber};
@@ -253,6 +354,7 @@
 </span><span class="doccomment">/// A recursive, manually updated [`ChunkStoreSubscriber`] that maintains the entity hierarchy.
 ///
 /// The tree contains a list of subtrees, and so on recursively.
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>EntityTree {
     <span class="doccomment">/// Full path prefix to the root of this (sub)tree.
     </span><span class="kw">pub </span>path: EntityPath,
@@ -362,7 +464,12 @@
     }
 
     <span class="doccomment">/// Returns `true` if this entity has no children and no data.
-    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>, engine: <span class="kw-2">&amp;</span>StorageEngineReadGuard&lt;<span class="lifetime">'_</span>&gt;) -&gt; bool {
+    ///
+    /// Checking for the absence of data is neither costly nor totally free: do it a few hundreds or
+    /// thousands times a frame and it will absolutely kill framerate.
+    /// Don't blindly call this on every existing entity every frame: use [`ChunkStoreEvent`]s to make
+    /// sure anything changed at all first.
+    </span><span class="kw">pub fn </span>check_is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>, engine: <span class="kw-2">&amp;</span>StorageEngineReadGuard&lt;<span class="lifetime">'_</span>&gt;) -&gt; bool {
         <span class="self">self</span>.children.is_empty() &amp;&amp; !engine.store().entity_has_data(<span class="kw-2">&amp;</span><span class="self">self</span>.path)
     }
 
@@ -399,6 +506,7 @@
     </span><span class="kw">pub fn </span>on_store_deletions(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         engine: <span class="kw-2">&amp;</span>StorageEngineReadGuard&lt;<span class="lifetime">'_</span>&gt;,
+        entity_paths_with_deletions: <span class="kw-2">&amp;</span>IntSet&lt;EntityPath&gt;,
         events: <span class="kw-2">&amp;</span>[ChunkStoreEvent],
     ) {
         <span class="macro">re_tracing::profile_function!</span>();
@@ -410,9 +518,22 @@
 
         <span class="self">self</span>.children.retain(|<span class="kw">_</span>, entity| {
             <span class="comment">// this is placed first, because we'll only know if the child entity is empty after telling it to clear itself.
-            </span>entity.on_store_deletions(engine, events);
+            </span>entity.on_store_deletions(engine, entity_paths_with_deletions, events);
 
-            !entity.is_empty(engine)
+            <span class="kw">let </span>has_children = || !entity.children.is_empty();
+            <span class="comment">// Checking for lack of data is not free, so make sure there is any reason to believe
+            // that any relevant data has changed first.
+            </span><span class="kw">let </span>has_recursive_deletion_events = || {
+                entity_paths_with_deletions
+                    .iter()
+                    .any(|removed_entity_path| removed_entity_path.starts_with(<span class="kw-2">&amp;</span>entity.path))
+            };
+            <span class="kw">let </span>has_data = || engine.store().entity_has_data(<span class="kw-2">&amp;</span>entity.path);
+
+            <span class="kw">let </span>should_be_removed =
+                !has_children() &amp;&amp; (has_recursive_deletion_events() &amp;&amp; !has_data());
+
+            !should_be_removed
         });
     }
 
@@ -474,6 +595,87 @@
         </span>}
 
         visit(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>predicate)
+    }
+}
+
+<span class="attr">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use </span>std::sync::Arc;
+
+    <span class="kw">use </span>re_chunk::{Chunk, RowId};
+    <span class="kw">use </span>re_log_types::{example_components::MyPoint, EntityPath, StoreId, TimePoint, Timeline};
+
+    <span class="kw">use </span><span class="kw">crate</span>::EntityDb;
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>deleting_descendants() -&gt; anyhow::Result&lt;()&gt; {
+        re_log::setup_logging();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>db = EntityDb::new(StoreId::random(re_log_types::StoreKind::Recording));
+
+        <span class="kw">let </span>timeline_frame = Timeline::new_sequence(<span class="string">"frame"</span>);
+
+        <span class="kw">let </span>entity_path_parent: EntityPath = <span class="string">"parent"</span>.into();
+        <span class="kw">let </span>entity_path_child: EntityPath = <span class="string">"parent/child1"</span>.into();
+        <span class="kw">let </span>entity_path_grandchild: EntityPath = <span class="string">"parent/child1/grandchild"</span>.into();
+
+        <span class="macro">assert!</span>(db.tree().check_is_empty(<span class="kw-2">&amp;</span>db.storage_engine()));
+
+        {
+            <span class="kw">let </span>row_id = RowId::new();
+            <span class="kw">let </span>timepoint = TimePoint::from_iter([(timeline_frame, <span class="number">10</span>)]);
+            <span class="kw">let </span>point = MyPoint::new(<span class="number">1.0</span>, <span class="number">2.0</span>);
+            <span class="kw">let </span>chunk = Chunk::builder(entity_path_grandchild.clone())
+                .with_component_batches(row_id, timepoint, [<span class="kw-2">&amp;</span>[point] <span class="kw">as _</span>])
+                .build()<span class="question-mark">?</span>;
+
+            db.add_chunk(<span class="kw-2">&amp;</span>Arc::new(chunk))<span class="question-mark">?</span>;
+        }
+
+        {
+            <span class="kw">let </span>parent = db
+                .tree()
+                .find_first_child_recursive(|entity_path| <span class="kw-2">*</span>entity_path == entity_path_parent)
+                .unwrap();
+            <span class="kw">let </span>child = db
+                .tree()
+                .find_first_child_recursive(|entity_path| <span class="kw-2">*</span>entity_path == entity_path_child)
+                .unwrap();
+            <span class="kw">let </span>grandchild = db
+                .tree()
+                .find_first_child_recursive(|entity_path| <span class="kw-2">*</span>entity_path == entity_path_grandchild)
+                .unwrap();
+
+            <span class="macro">assert_eq!</span>(<span class="number">1</span>, parent.children.len());
+            <span class="macro">assert_eq!</span>(<span class="number">1</span>, child.children.len());
+            <span class="macro">assert_eq!</span>(<span class="number">0</span>, grandchild.children.len());
+
+            <span class="macro">assert!</span>(!db.tree().check_is_empty(<span class="kw-2">&amp;</span>db.storage_engine()));
+            <span class="macro">assert!</span>(!parent.check_is_empty(<span class="kw-2">&amp;</span>db.storage_engine()));
+            <span class="macro">assert!</span>(!child.check_is_empty(<span class="kw-2">&amp;</span>db.storage_engine()));
+            <span class="macro">assert!</span>(!grandchild.check_is_empty(<span class="kw-2">&amp;</span>db.storage_engine()));
+        }
+
+        <span class="kw">let </span>_store_events = db.gc(<span class="kw-2">&amp;</span>re_chunk_store::GarbageCollectionOptions::gc_everything());
+
+        {
+            <span class="kw">let </span>parent = db
+                .tree()
+                .find_first_child_recursive(|entity_path| <span class="kw-2">*</span>entity_path == entity_path_parent);
+            <span class="kw">let </span>child = db
+                .tree()
+                .find_first_child_recursive(|entity_path| <span class="kw-2">*</span>entity_path == entity_path_child);
+            <span class="kw">let </span>grandchild = db
+                .tree()
+                .find_first_child_recursive(|entity_path| <span class="kw-2">*</span>entity_path == entity_path_grandchild);
+
+            <span class="macro">assert!</span>(db.tree().check_is_empty(<span class="kw-2">&amp;</span>db.storage_engine()));
+            <span class="macro">assert!</span>(parent.is_none());
+            <span class="macro">assert!</span>(child.is_none());
+            <span class="macro">assert!</span>(grandchild.is_none());
+        }
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div></section></main></body></html>
